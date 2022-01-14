@@ -1,11 +1,11 @@
 import { Request, Response } from 'express'
 import Country from '../models/Country'
 
-export const getCountryData = async (req: Request, res: Response) => {
+export const getHistoricalData = async (req: Request, res: Response) => {
 	try {
-		const { countryName } = req.params
+		const { location } = req.params
 
-		const result = await Country.find({ location: countryName })
+		const result = await Country.find({ location })
 
 		if (!result) return res.status(400).json({ message: 'No results found.' })
 

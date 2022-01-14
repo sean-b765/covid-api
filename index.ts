@@ -2,7 +2,8 @@ import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import express from 'express'
 import { appendData } from './lib/helpers'
-import countryRoutes from './routes/country'
+import historyRoutes from './routes/history'
+import homeRoute from './routes/home'
 
 dotenv.config()
 
@@ -16,7 +17,8 @@ mongoose.connect(process.env.MONGO_URL, () => {
 app.use(express.json())
 
 // Routes
-app.use(countryRoutes)
+app.use(historyRoutes)
+app.use(homeRoute)
 
 const PORT = process.env.PORT || 5000
 
