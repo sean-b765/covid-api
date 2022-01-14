@@ -4,6 +4,7 @@ import express from 'express'
 import { appendData, getAllData } from './lib/helpers'
 import historyRoutes from './routes/history'
 import homeRoute from './routes/home'
+import cors from 'cors'
 
 dotenv.config()
 
@@ -15,6 +16,11 @@ mongoose.connect(process.env.MONGO_URL, () => {
 
 // Middleware
 app.use(express.json())
+app.use(
+	cors({
+		origin: '*',
+	})
+)
 
 // Routes
 app.use(historyRoutes)

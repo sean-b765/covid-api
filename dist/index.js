@@ -9,6 +9,7 @@ const express_1 = __importDefault(require("express"));
 const helpers_1 = require("./lib/helpers");
 const history_1 = __importDefault(require("./routes/history"));
 const home_1 = __importDefault(require("./routes/home"));
+const cors_1 = __importDefault(require("cors"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 mongoose_1.default.connect(process.env.MONGO_URL, () => {
@@ -16,6 +17,9 @@ mongoose_1.default.connect(process.env.MONGO_URL, () => {
 });
 // Middleware
 app.use(express_1.default.json());
+app.use((0, cors_1.default)({
+    origin: '*',
+}));
 // Routes
 app.use(history_1.default);
 app.use(home_1.default);
