@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getHistoricalData = void 0;
+const moment_1 = __importDefault(require("moment"));
 const Country_1 = __importDefault(require("../models/Country"));
 const getHistoricalData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -20,7 +21,8 @@ const getHistoricalData = (req, res) => __awaiter(void 0, void 0, void 0, functi
         const result = yield Country_1.default.find({ location });
         if (!result)
             return res.status(400).json({ message: 'No results found.' });
-        res.status(200).json(result);
+        let sorted = result.sort((a, b) => (0, moment_1.default)(a.date).diff(b.date));
+        res.status(200).json(sorted);
     }
     catch (err) {
         return res.sendStatus(500);

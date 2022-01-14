@@ -45,8 +45,12 @@ export const appendData = () => {
 
 						// Filter the array by only World records
 						const array = records.filter((item) => item.location === 'World')
+						// if the array is not sorted, we can't grab the last record to find the last date
+						let sorted = array.sort((a: Record, b: Record) =>
+							moment(a.date).diff(b.date)
+						)
 						// The last index of the array will be the latest record
-						const latestAvailableDate = array[array.length - 1].date
+						const latestAvailableDate = sorted[array.length - 1].date
 
 						// Check if the latest date is already in the database
 						const isLatestInDb = await Country.exists({

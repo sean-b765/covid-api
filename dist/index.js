@@ -23,8 +23,11 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Express listening on port ${PORT}`);
 });
-(function dailyTimer() {
-    (0, helpers_1.appendData)();
-    setTimeout(dailyTimer, 1000 * 60 * 60 * 12);
-})();
+(0, helpers_1.getAllData)();
+// IIFE
+// Run every 12 hours
+// ;(function dailyTimer() {
+// 	appendData()
+// 	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)
+// })()
 //# sourceMappingURL=index.js.map

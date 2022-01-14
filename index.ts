@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import express from 'express'
-import { appendData } from './lib/helpers'
+import { appendData, getAllData } from './lib/helpers'
 import historyRoutes from './routes/history'
 import homeRoute from './routes/home'
 
@@ -26,9 +26,11 @@ app.listen(PORT, () => {
 	console.log(`Express listening on port ${PORT}`)
 })
 
+getAllData()
+
 // IIFE
 // Run every 12 hours
-;(function dailyTimer() {
-	appendData()
-	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)
-})()
+// ;(function dailyTimer() {
+// 	appendData()
+// 	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)
+// })()
