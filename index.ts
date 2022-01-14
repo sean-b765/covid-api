@@ -26,11 +26,9 @@ app.listen(PORT, () => {
 	console.log(`Express listening on port ${PORT}`)
 })
 
-getAllData()
-
 // IIFE
 // Run every 12 hours
-// ;(function dailyTimer() {
-// 	appendData()
-// 	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)
-// })()
+;(function dailyTimer() {
+	appendData()
+	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)
+})()
