@@ -32,9 +32,7 @@ const deleteDay = async (date: string) => {
 /*
   Function ran on a timer to update collection daily
 */
-export const getDataDaily = () => {
-	console.log('getting data')
-
+export const appendData = () => {
 	axios
 		.get(process.env.SOURCE_URL)
 		.then((res) => {
@@ -79,6 +77,7 @@ export const getDataDaily = () => {
 							moment(record.date).isAfter(latestInDb.date)
 						)
 
+						// Create documents with new JHU data
 						const result = await Country.create(newData)
 
 						console.log(
