@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
+import moment from 'moment'
 import Country from '../models/Country'
+import { Record } from '../types'
 
 export const getHistoricalData = async (req: Request, res: Response) => {
 	try {
@@ -9,7 +11,11 @@ export const getHistoricalData = async (req: Request, res: Response) => {
 
 		if (!result) return res.status(400).json({ message: 'No results found.' })
 
-		res.status(200).json(result)
+		let sorted = result.sort((a: Record, b: Record) =>
+			moment(a.date).diff(b.date)
+		)
+
+		res.status(200).json(sorted)
 	} catch (err) {
 		return res.sendStatus(500)
 	}
