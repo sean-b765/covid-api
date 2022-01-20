@@ -7,7 +7,7 @@ export const getHistoricalData = async (req: Request, res: Response) => {
 	try {
 		const { location } = req.params
 
-		const result = await History.find({ location })
+		const result = await History.findOne({ location })
 
 		if (!result) return res.status(400).json({ message: 'No results found.' })
 

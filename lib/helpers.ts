@@ -111,8 +111,6 @@ export const appendData = () => {
 							return
 						}
 
-						return
-
 						// The latest record does not exist in the database
 						const _latestInDb = dbData.data[dbData.data.length - 1]
 

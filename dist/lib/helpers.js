@@ -108,7 +108,6 @@ const appendData = () => {
                     console.log(`DB_UPDATE::${dateNow} - Already up-to-date, daily update not needed - latest available from source: ${latestAvailableDate}`);
                     return;
                 }
-                return;
                 // The latest record does not exist in the database
                 const _latestInDb = dbData.data[dbData.data.length - 1];
                 console.log(`DB_UPDATE::${dateNow} - Adding data after ${_latestInDb.date}`);

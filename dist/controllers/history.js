@@ -17,7 +17,7 @@ const History_1 = __importDefault(require("../models/History"));
 const getHistoricalData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { location } = req.params;
-        const result = yield History_1.default.find({ location });
+        const result = yield History_1.default.findOne({ location });
         if (!result)
             return res.status(400).json({ message: 'No results found.' });
         res.status(200).json(result);
