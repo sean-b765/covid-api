@@ -1,10 +1,11 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import express from 'express'
-import { appendData, getAllData } from './lib/helpers'
 import historyRoutes from './routes/history'
 import homeRoute from './routes/home'
+import currentRoutes from './routes/current'
 import cors from 'cors'
+import { appendData, getAllData } from './lib/helpers'
 
 dotenv.config()
 
@@ -25,6 +26,7 @@ app.use(
 // Routes
 app.use(historyRoutes)
 app.use(homeRoute)
+app.use(currentRoutes)
 
 const PORT = process.env.PORT || 5000
 

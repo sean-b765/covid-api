@@ -12,12 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHistoricalData = void 0;
-const History_1 = __importDefault(require("../models/History"));
-const getHistoricalData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getCurrentData = void 0;
+const Current_1 = __importDefault(require("../models/Current"));
+const getCurrentData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { location } = req.params;
-        const result = yield History_1.default.find({ location });
+        const result = yield Current_1.default.find();
         if (!result)
             return res.status(400).json({ message: 'No results found.' });
         res.status(200).json(result);
@@ -26,5 +25,5 @@ const getHistoricalData = (req, res) => __awaiter(void 0, void 0, void 0, functi
         return res.sendStatus(500);
     }
 });
-exports.getHistoricalData = getHistoricalData;
-//# sourceMappingURL=history.js.map
+exports.getCurrentData = getCurrentData;
+//# sourceMappingURL=current.js.map
