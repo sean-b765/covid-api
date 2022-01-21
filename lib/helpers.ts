@@ -92,19 +92,15 @@ export const appendData = () => {
 
 						// Filter the array by only World records
 						const csvArray = records.filter((item) => item.location === 'World')
-						// if the array is not sorted, we can't grab the last record to find the last date
-						let sortedCSV = csvArray.sort((a: Record, b: Record) =>
-							moment(a.date).diff(b.date)
-						)
 						// The last index of the array will be the latest record
-						const latestAvailableDate = sortedCSV[csvArray.length - 1].date
+						const latestAvailableDate = csvArray[csvArray.length - 1].date
 
 						// Get all History data from Mongo
 						const documents = await History.find()
 
 						// Single test document to find latest date in data array
 						const worldDocument = documents.filter(
-							(value) => value.location === 'World'
+							(doc) => doc.location === 'World'
 						)[0]
 
 						const latestInDb = worldDocument.data[worldDocument.data.length - 1]
@@ -129,7 +125,7 @@ export const appendData = () => {
 
 						// Map through existing documents,
 						//  pushing new data to the 'data' field
-						documents.map(async (document) => {
+						documents.forEach(async (document) => {
 							// filter the new JHU data,
 							//  push each new record to the document.data array
 							newData.filter((data) => {

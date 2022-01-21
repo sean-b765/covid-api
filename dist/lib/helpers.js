@@ -96,14 +96,12 @@ const appendData = () => {
                 console.log(`DB_UPDATE::${dateNow} - Starting daily DB update.`);
                 // Filter the array by only World records
                 const csvArray = records.filter((item) => item.location === 'World');
-                // if the array is not sorted, we can't grab the last record to find the last date
-                let sortedCSV = csvArray.sort((a, b) => (0, moment_1.default)(a.date).diff(b.date));
                 // The last index of the array will be the latest record
-                const latestAvailableDate = sortedCSV[csvArray.length - 1].date;
+                const latestAvailableDate = csvArray[csvArray.length - 1].date;
                 // Get all History data from Mongo
                 const documents = yield History_1.default.find();
                 // Single test document to find latest date in data array
-                const worldDocument = documents.filter((value) => value.location === 'World')[0];
+                const worldDocument = documents.filter((doc) => doc.location === 'World')[0];
                 const latestInDb = worldDocument.data[worldDocument.data.length - 1];
                 // Exit if no update is required,
                 //  i.e. DB latest record date is the same as CSV data date
@@ -116,7 +114,7 @@ const appendData = () => {
                 const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(latestInDb.date));
                 // Map through existing documents,
                 //  pushing new data to the 'data' field
-                documents.map((document) => __awaiter(void 0, void 0, void 0, function* () {
+                documents.forEach((document) => __awaiter(void 0, void 0, void 0, function* () {
                     // filter the new JHU data,
                     //  push each new record to the document.data array
                     newData.filter((data) => {
