@@ -1,3 +1,3 @@
 "scripts": {
-  "start": "node ./dist/index.js"
+  "start": "node --max_old_space_size=2048 ./dist/index.js"
 }

@@ -90,60 +90,62 @@ const appendData = () => {
         .then((res) => {
         (0, csvtojson_1.default)()
             .fromString(res.data)
-            .then((records) => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                const dateNow = (0, moment_1.default)().format('YYYY-MM-DD');
-                console.log(`DB_UPDATE::${dateNow} - Starting daily DB update.`);
-                // Filter the array by only World records
-                const csvArray = records.filter((item) => item.location === 'World');
-                // The last index of the array will be the latest record
-                const latestAvailableDate = csvArray[csvArray.length - 1].date;
-                // Get all History data from Mongo
-                const documents = yield History_1.default.find();
-                // Single test document to find latest date in data array
-                const worldDocument = documents.filter((doc) => doc.location === 'World')[0];
-                const latestInDb = worldDocument.data[worldDocument.data.length - 1];
-                // Exit if no update is required,
-                //  i.e. DB latest record date is the same as CSV data date
-                if (latestInDb.date === latestAvailableDate) {
-                    console.log(`DB_UPDATE::${dateNow} - Already up-to-date, daily update not needed - latest available from source: ${latestAvailableDate}`);
-                    return;
-                }
-                console.log(`DB_UPDATE::${dateNow} - Adding data after ${latestInDb.date}`);
-                // We need to filter JHU data by date to isolate the newest data
-                const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(latestInDb.date));
-                // Map through existing documents,
-                //  pushing new data to the 'data' field
-                documents.forEach((document) => __awaiter(void 0, void 0, void 0, function* () {
-                    // filter the new JHU data,
-                    //  push each new record to the document.data array
-                    newData.filter((data) => {
-                        if (data.location !== document.location)
-                            return;
-                        document.data.push({
-                            date: data.date,
-                            total_cases: data.total_cases,
-                            total_deaths: data.total_deaths,
-                            new_cases: data.new_cases,
-                            new_deaths: data.new_deaths,
-                            weekly_cases: data.weekly_cases,
-                            weekly_deaths: data.weekly_deaths,
-                            biweekly_cases: data.biweekly_cases,
-                            biweekly_deaths: data.biweekly_deaths,
+            .then(function receiveJSONRecords(records) {
+            return __awaiter(this, void 0, void 0, function* () {
+                try {
+                    const dateNow = (0, moment_1.default)().format('YYYY-MM-DD');
+                    console.log(`DB_UPDATE::${dateNow} - Starting daily DB update.`);
+                    // Filter the array by only World records
+                    const csvArray = records.filter((item) => item.location === 'World');
+                    // The last index of the array will be the latest record
+                    const latestAvailableDate = csvArray[csvArray.length - 1].date;
+                    // Get all History data from Mongo
+                    const documents = yield History_1.default.find();
+                    // Single test document to find latest date in data array
+                    const worldDocument = documents.filter((doc) => doc.location === 'World')[0];
+                    const latestInDb = worldDocument.data[worldDocument.data.length - 1];
+                    // Exit if no update is required,
+                    //  i.e. DB latest record date is the same as CSV data date
+                    if (latestInDb.date === latestAvailableDate) {
+                        console.log(`DB_UPDATE::${dateNow} - Already up-to-date, daily update not needed - latest available from source: ${latestAvailableDate}`);
+                        return;
+                    }
+                    console.log(`DB_UPDATE::${dateNow} - Adding data after ${latestInDb.date}`);
+                    // We need to filter JHU data by date to isolate the newest data
+                    const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(latestInDb.date));
+                    // Map through existing documents,
+                    //  pushing new data to the 'data' field
+                    documents.forEach((document) => __awaiter(this, void 0, void 0, function* () {
+                        // filter the new JHU data,
+                        //  push each new record to the document.data array
+                        newData.filter((data) => {
+                            if (data.location !== document.location)
+                                return;
+                            document.data.push({
+                                date: data.date,
+                                total_cases: data.total_cases,
+                                total_deaths: data.total_deaths,
+                                new_cases: data.new_cases,
+                                new_deaths: data.new_deaths,
+                                weekly_cases: data.weekly_cases,
+                                weekly_deaths: data.weekly_deaths,
+                                biweekly_cases: data.biweekly_cases,
+                                biweekly_deaths: data.biweekly_deaths,
+                            });
                         });
-                    });
-                    // save the document
-                    yield document.save();
-                }));
-                console.log(`DB_UPDATE::${dateNow} - Daily update completed. Added data from ${(0, moment_1.default)(latestInDb.date)
-                    .add(1, 'day')
-                    .format('YYYY-MM-DD')} to ${latestAvailableDate}, inclusive.`);
-            }
-            catch (err) {
-                console.log(err);
-                console.log(`DB_UPDATE::${(0, moment_1.default)().format('YYYY-MM-DD')} - Error/exiting.`);
-            }
-        }), (error) => {
+                        // save the document
+                        yield document.save();
+                    }));
+                    console.log(`DB_UPDATE::${dateNow} - Daily update completed. Added data from ${(0, moment_1.default)(latestInDb.date)
+                        .add(1, 'day')
+                        .format('YYYY-MM-DD')} to ${latestAvailableDate}, inclusive.`);
+                }
+                catch (err) {
+                    console.log(err);
+                    console.log(`DB_UPDATE::${(0, moment_1.default)().format('YYYY-MM-DD')} - Error/exiting.`);
+                }
+            });
+        }, (error) => {
             console.log(error);
         });
     })
