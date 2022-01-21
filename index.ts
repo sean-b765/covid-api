@@ -6,6 +6,7 @@ import homeRoute from './routes/home'
 import currentRoutes from './routes/current'
 import cors from 'cors'
 import { appendData, getAllData } from './lib/helpers'
+import moment from 'moment'
 
 dotenv.config()
 
@@ -35,8 +36,13 @@ app.listen(PORT, () => {
 })
 
 // IIFE
-// Run every 12 hours. In heroku this will run when the service stops idling as well.
+// Run every 50 minutes, executes appendData every few hours
 ;(function dailyTimer() {
-	appendData()
-	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)
+	const hrs = moment().hours()
+	// this array specifies the hours of the day which appendData() should be called
+	const updateHours = [1, 4, 7, 10, 13, 16, 19, 22]
+
+	if (updateHours.includes(hrs)) appendData()
+
+	setTimeout(dailyTimer, 1000 * 60 * 50)
 })()

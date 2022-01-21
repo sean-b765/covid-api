@@ -85,7 +85,7 @@ export const appendData = () => {
 			csv()
 				.fromString(res.data)
 				.then(
-					async function receiveJSONRecords(records: Record[]) {
+					async function handleJsonRecords(records: Record[]) {
 						try {
 							const dateNow = moment().format('YYYY-MM-DD')
 
