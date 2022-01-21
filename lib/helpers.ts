@@ -24,6 +24,10 @@ export const getAllData = () => {
 
 					res.map((record) => {
 						// Already have an existing location key
+						// test
+						if (record.date === '2022-01-20' || record.date === '2022-01-19')
+							return
+
 						if (Object.keys(_obj).includes(record.location)) {
 							_obj[record.location].data.push({
 								date: record.date,
@@ -95,12 +99,15 @@ export const appendData = () => {
 						// The last index of the array will be the latest record
 						const latestAvailableDate = sortedCSV[csvArray.length - 1].date
 
-						// Check if the latest date is already in the database
-						const dbData = await History.findOne({
-							location: 'World',
-						})
+						// Get all History data from Mongo
+						const documents = await History.find()
 
-						const latestInDb = dbData.data[dbData.data.length - 1]
+						// Single test document to find latest date in data array
+						const worldDocument = documents.filter(
+							(value) => value.location === 'World'
+						)[0]
+
+						const latestInDb = worldDocument.data[worldDocument.data.length - 1]
 
 						// Exit if no update is required,
 						//  i.e. DB latest record date is the same as CSV data date
@@ -111,27 +118,46 @@ export const appendData = () => {
 							return
 						}
 
-						// The latest record does not exist in the database
-						const _latestInDb = dbData.data[dbData.data.length - 1]
-
 						console.log(
-							`DB_UPDATE::${dateNow} - Adding data after ${_latestInDb.date}`
+							`DB_UPDATE::${dateNow} - Adding data after ${latestInDb.date}`
 						)
 
-						// We need to filter JHU data by date and add all of the most recent records which do not appear in the DB
+						// We need to filter JHU data by date to isolate the newest data
 						const newData = records.filter((record) =>
-							moment(record.date).isAfter(_latestInDb.date)
+							moment(record.date).isAfter(latestInDb.date)
 						)
 
-						// Create documents with new JHU data
-						const result = await History.create(newData)
+						// Map through existing documents,
+						//  pushing new data to the 'data' field
+						documents.map(async (document) => {
+							// filter the new JHU data,
+							//  push each new record to the document.data array
+							newData.filter((data) => {
+								if (data.location !== document.location) return
+
+								document.data.push({
+									date: data.date,
+									total_cases: data.total_cases,
+									total_deaths: data.total_deaths,
+									new_cases: data.new_cases,
+									new_deaths: data.new_deaths,
+									weekly_cases: data.weekly_cases,
+									weekly_deaths: data.weekly_deaths,
+									biweekly_cases: data.biweekly_cases,
+									biweekly_deaths: data.biweekly_deaths,
+								})
+							})
+
+							// save the document
+							await document.save()
+						})
 
 						console.log(
-							`DB_UPDATE::${dateNow} - Daily update completed. Added ${
-								result.length
-							} new documents, starting at ${moment(latestInDb.date)
+							`DB_UPDATE::${dateNow} - Daily update completed. Added data from ${moment(
+								latestInDb.date
+							)
 								.add(1, 'day')
-								.format('YYYY-MM-DD')} to ${latestAvailableDate}.`
+								.format('YYYY-MM-DD')} to ${latestAvailableDate}, inclusive.`
 						)
 					} catch (err) {
 						console.log(err)

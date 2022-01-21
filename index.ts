@@ -35,7 +35,7 @@ app.listen(PORT, () => {
 })
 
 // IIFE
-// Run every 12 hours
+// Run every 12 hours. In heroku this will run when the service stops idling as well.
 ;(function dailyTimer() {
 	appendData()
 	setTimeout(dailyTimer, 1000 * 60 * 60 * 12)

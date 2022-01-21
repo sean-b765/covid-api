@@ -35,6 +35,9 @@ const getAllData = () => {
             let _obj = {};
             res.map((record) => {
                 // Already have an existing location key
+                // test
+                if (record.date === '2022-01-20' || record.date === '2022-01-19')
+                    return;
                 if (Object.keys(_obj).includes(record.location)) {
                     _obj[record.location].data.push({
                         date: record.date,
@@ -97,27 +100,46 @@ const appendData = () => {
                 let sortedCSV = csvArray.sort((a, b) => (0, moment_1.default)(a.date).diff(b.date));
                 // The last index of the array will be the latest record
                 const latestAvailableDate = sortedCSV[csvArray.length - 1].date;
-                // Check if the latest date is already in the database
-                const dbData = yield History_1.default.findOne({
-                    location: 'World',
-                });
-                const latestInDb = dbData.data[dbData.data.length - 1];
+                // Get all History data from Mongo
+                const documents = yield History_1.default.find();
+                // Single test document to find latest date in data array
+                const worldDocument = documents.filter((value) => value.location === 'World')[0];
+                const latestInDb = worldDocument.data[worldDocument.data.length - 1];
                 // Exit if no update is required,
                 //  i.e. DB latest record date is the same as CSV data date
                 if (latestInDb.date === latestAvailableDate) {
                     console.log(`DB_UPDATE::${dateNow} - Already up-to-date, daily update not needed - latest available from source: ${latestAvailableDate}`);
                     return;
                 }
-                // The latest record does not exist in the database
-                const _latestInDb = dbData.data[dbData.data.length - 1];
-                console.log(`DB_UPDATE::${dateNow} - Adding data after ${_latestInDb.date}`);
-                // We need to filter JHU data by date and add all of the most recent records which do not appear in the DB
-                const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(_latestInDb.date));
-                // Create documents with new JHU data
-                const result = yield History_1.default.create(newData);
-                console.log(`DB_UPDATE::${dateNow} - Daily update completed. Added ${result.length} new documents, starting at ${(0, moment_1.default)(latestInDb.date)
+                console.log(`DB_UPDATE::${dateNow} - Adding data after ${latestInDb.date}`);
+                // We need to filter JHU data by date to isolate the newest data
+                const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(latestInDb.date));
+                // Map through existing documents,
+                //  pushing new data to the 'data' field
+                documents.map((document) => __awaiter(void 0, void 0, void 0, function* () {
+                    // filter the new JHU data,
+                    //  push each new record to the document.data array
+                    newData.filter((data) => {
+                        if (data.location !== document.location)
+                            return;
+                        document.data.push({
+                            date: data.date,
+                            total_cases: data.total_cases,
+                            total_deaths: data.total_deaths,
+                            new_cases: data.new_cases,
+                            new_deaths: data.new_deaths,
+                            weekly_cases: data.weekly_cases,
+                            weekly_deaths: data.weekly_deaths,
+                            biweekly_cases: data.biweekly_cases,
+                            biweekly_deaths: data.biweekly_deaths,
+                        });
+                    });
+                    // save the document
+                    yield document.save();
+                }));
+                console.log(`DB_UPDATE::${dateNow} - Daily update completed. Added data from ${(0, moment_1.default)(latestInDb.date)
                     .add(1, 'day')
-                    .format('YYYY-MM-DD')} to ${latestAvailableDate}.`);
+                    .format('YYYY-MM-DD')} to ${latestAvailableDate}, inclusive.`);
             }
             catch (err) {
                 console.log(err);
