@@ -143,7 +143,9 @@ const appendData = () => {
                 console.log(err);
                 console.log(`DB_UPDATE::${(0, moment_1.default)().format('YYYY-MM-DD')} - Error/exiting.`);
             }
-        }));
+        }), (error) => {
+            console.log(error);
+        });
     })
         .catch((err) => console.log(err));
 };
