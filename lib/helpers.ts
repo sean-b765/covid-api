@@ -241,7 +241,7 @@ async function getCurrent(pass: number) {
 
 	// Make sure to filter out records without lat/long fields
 	const _records: RawCurrentRecord[] = res.filter(
-		(item) => item.lat !== '' && item.lng !== ''
+		(item) => item.Lat !== '' && item.Long_ !== ''
 	)
 
 	_records.forEach((record: RawCurrentRecord) => {
@@ -249,7 +249,9 @@ async function getCurrent(pass: number) {
 		const ccode = countryCodes.filter(
 			(country) =>
 				country.db_name === record.Country_Region ||
-				country.alpha2code === record.Country_Region
+				country.alpha2code === record.Country_Region ||
+				country.name === record.Country_Region ||
+				country.other_name === record.Country_Region
 		)[0]
 
 		let db_name, latitude, longitude
@@ -261,11 +263,6 @@ async function getCurrent(pass: number) {
 		}
 
 		if (db_name === undefined) return
-
-		// Now we need to filter the array again, by Country_Region, to find the provinces
-		// const provinces = _records.filter(
-		// 	(record) => record.Country_Region === record.Country_Region
-		// )
 
 		// Store results in our dictionary object
 		if (Object.keys(dictionary).includes(db_name)) {
