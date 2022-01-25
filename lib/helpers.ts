@@ -1,9 +1,16 @@
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import moment from 'moment'
 import History from '../models/History'
-import { CurrentRecord, RawData, Record } from '../types'
+import {
+	RawCurrentRecord,
+	HistoricalRecord,
+	RawHistoricalRecord,
+	CurrentRecord,
+} from '../types'
 import csv from 'csvtojson'
 import Current from '../models/Current'
+import countryCodes from './countryCodes'
+import Key from '../models/Key'
 
 /*
   Should only be called for first initialization
@@ -15,12 +22,12 @@ export const getAllData = () => {
 			// convert text (csv)
 			csv()
 				.fromString(res.data)
-				.then(async (res: Record[]) => {
+				.then(async (res: RawHistoricalRecord[]) => {
 					// Eliminate data redundancy before storing
 					// Create an array of historical data rather than storing
 					//  the same country data for all dates
 
-					let _obj: { [key: string]: { data?: Array<RawData> } } = {}
+					let _obj: { [key: string]: { data?: Array<HistoricalRecord> } } = {}
 
 					res.map((record) => {
 						// Already have an existing location key
@@ -48,10 +55,11 @@ export const getAllData = () => {
 						}
 					})
 
-					// Ensure all data are sorted
+					// Ensure all data is sorted
 					Object.values(_obj).map((data) => {
-						data.data = data.data.sort((a: RawData, b: RawData) =>
-							moment(a.date).diff(b.date)
+						data.data = data.data.sort(
+							(a: HistoricalRecord, b: HistoricalRecord) =>
+								moment(a.date).diff(b.date)
 						)
 					})
 
@@ -85,7 +93,7 @@ export const appendData = () => {
 			csv()
 				.fromString(res.data)
 				.then(
-					async function handleJsonRecords(records: Record[]) {
+					async function handleJsonRecords(records: RawHistoricalRecord[]) {
 						try {
 							const dateNow = moment().format('YYYY-MM-DD')
 
@@ -177,38 +185,170 @@ export const appendData = () => {
 /*
 	Get current data for the day, includes cumulative cases
 */
-export const getCurrentData = () => {
-	axios
-		.get(
-			`${process.env.CURRENT_SOURCE_URL}${moment()
-				.subtract(1, 'day')
-				.format('MM-DD-YYYY')}.csv`
-		)
-		.then((res) => {
-			// convert text (csv)
-			csv()
-				.fromString(res.data)
-				.then(async (res: CurrentRecord[]) => {
-					// Make sure to filter out records without lat/long fields
+export const getCurrentData = async () => {
+	let response = 0,
+		pass = 0
 
-					const records = res
-						.map((item: CurrentRecord) => {
-							return {
-								zip: item?.FIPS,
-								county: item?.Admin2,
-								state: item?.Province_State,
-								country: item?.Country_Region,
-								lat: item?.Lat,
-								lng: item?.Long_,
-								cumulative: item?.Confirmed,
-								deaths: item?.Deaths,
-								recovered: item?.Recovered,
-							}
-						})
-						.filter((item) => item.lat && item.lng)
-					// create DB records
-					await Current.create(records)
+	// If response is 404, there is no csv data for the date
+	do {
+		const { status } = await getCurrent(++pass)
+		response = status
+
+		console.log(pass, status)
+	} while (response === 404)
+}
+
+type CurrentDictionary = {
+	[key: string]: {
+		location: string
+		lat: string
+		lng: string
+		provinces: Array<{
+			zip: string
+			county: string
+			state: string
+			lat: string
+			lng: string
+			cumulative: string
+			deaths: string
+			recovered: string
+		}>
+		cumulative?: string
+		deaths?: string
+		recovered?: string
+	}
+}
+
+async function getCurrent(pass: number) {
+	let result: AxiosResponse<any, any>,
+		dictionary: CurrentDictionary = {}
+
+	const date = moment()
+		.subtract(pass, pass === 1 ? 'day' : 'days')
+		.format('MM-DD-YYYY')
+
+	// GET the latest csv data from JHU
+	try {
+		result = await axios.get(`${process.env.CURRENT_SOURCE_URL}${date}.csv`)
+	} catch (err) {
+		return { status: 404 }
+	}
+
+	if (result.status !== 200) return { status: 404 }
+
+	// CSV to JSON
+	let res = await csv().fromString(result.data)
+
+	// Make sure to filter out records without lat/long fields
+	const _records: RawCurrentRecord[] = res.filter(
+		(item) => item.lat !== '' && item.lng !== ''
+	)
+
+	_records.forEach((record: RawCurrentRecord) => {
+		// Get the db_name, if it exists. United States = US in JHU data, so also take into account the alpha2 code
+		const ccode = countryCodes.filter(
+			(country) =>
+				country.db_name === record.Country_Region ||
+				country.alpha2code === record.Country_Region
+		)[0]
+
+		let db_name, latitude, longitude
+
+		if (ccode) {
+			db_name = ccode.db_name
+			latitude = ccode.latitude
+			longitude = ccode.longitude
+		}
+
+		if (db_name === undefined) return
+
+		// Now we need to filter the array again, by Country_Region, to find the provinces
+		// const provinces = _records.filter(
+		// 	(record) => record.Country_Region === record.Country_Region
+		// )
+
+		// Store results in our dictionary object
+		if (Object.keys(dictionary).includes(db_name)) {
+			dictionary[db_name].provinces.push({
+				zip: record?.FIPS,
+				county: record?.Admin2,
+				state: record?.Province_State,
+				lat: record?.Lat,
+				lng: record?.Long_,
+				cumulative: record?.Confirmed,
+				deaths: record?.Deaths,
+				recovered: record?.Recovered,
+			})
+		} else {
+			// If this is a state rather than country, initialize accordingly
+			if (record?.Province_State !== '') {
+				dictionary[db_name] = {
+					location: db_name,
+					lat: latitude,
+					lng: longitude,
+					provinces: [],
+				}
+				// Add to provinces
+				dictionary[db_name].provinces.push({
+					zip: record?.FIPS,
+					county: record?.Admin2,
+					state: record?.Province_State,
+					lat: record?.Lat,
+					lng: record?.Long_,
+					cumulative: record?.Confirmed,
+					deaths: record?.Deaths,
+					recovered: record?.Recovered,
 				})
-		})
-		.catch((err) => console.log(err))
+			} else {
+				// It is a country, not a state. Provinces will always be an empty array for countries without state data
+				dictionary[db_name] = {
+					location: db_name,
+					lat: latitude,
+					lng: longitude,
+					provinces: [],
+					cumulative: record?.Confirmed,
+					deaths: record?.Deaths,
+					recovered: record?.Recovered,
+				}
+			}
+		}
+	})
+
+	// Create DB records
+	Object.values(dictionary).map(async (value) => {
+		await Current.create(
+			value.provinces.length === 0
+				? {
+						location: value.location,
+						lat: value.lat,
+						lng: value.lng,
+						provinces: [],
+						cumulative: value.cumulative,
+						deaths: value.deaths,
+						recovered: value.recovered,
+				  }
+				: {
+						location: value.location,
+						lat: value.lat,
+						lng: value.lng,
+						provinces: value.provinces,
+						cumulative: `${value.provinces
+							.map((item) => Number(item.cumulative))
+							.reduce((prev, next) => prev + next)}`,
+						deaths: `${value.provinces
+							.map((item) => Number(item.deaths))
+							.reduce((prev, next) => prev + next)}`,
+						recovered: `${value.provinces
+							.map((item) => Number(item.recovered))
+							.reduce((prev, next) => prev + next)}`,
+				  }
+		)
+	})
+
+	// Create the Key for the lastDate so we can perform the Current update once a day
+	try {
+		await Key.create({ lastPullDate: date })
+	} catch (e) {}
+
+	return { status: 200 }
 }
