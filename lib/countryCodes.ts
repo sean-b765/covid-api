@@ -410,6 +410,7 @@ export default [
 	{
 		db_name: 'Congo',
 		name: 'Congo',
+		other_name: 'Congo (Brazzaville)',
 		alpha2code: 'CG',
 		alpha3code: 'COG',
 		latitude: -0.228021,
@@ -506,6 +507,7 @@ export default [
 	{
 		db_name: 'Democratic Republic of Congo',
 		name: 'DRC',
+		other_name: 'Congo (Kinshasa)',
 		alpha2code: 'CD',
 		alpha3code: 'COD',
 		latitude: -4.038333,
@@ -882,6 +884,7 @@ export default [
 	{
 		db_name: 'Ivory Coast',
 		name: 'Ivory Coast',
+		other_name: "Cote d'Ivoire",
 		alpha2code: 'CI',
 		alpha3code: 'CIV',
 		latitude: 7.539989,
@@ -1202,6 +1205,7 @@ export default [
 	{
 		db_name: 'Myanmar',
 		name: 'Myanmar',
+		other_name: 'Burma',
 		alpha2code: 'MM',
 		alpha3code: 'MMR',
 		latitude: 21.913965,
@@ -1650,6 +1654,7 @@ export default [
 	{
 		db_name: 'South Korea',
 		name: 'South Korea',
+		other_name: 'Korea, South',
 		alpha2code: 'KR',
 		alpha3code: 'KOR',
 		latitude: 35.907757,
@@ -1738,6 +1743,7 @@ export default [
 	{
 		db_name: 'Taiwan',
 		name: 'Taiwan',
+		other_name: 'Taiwan*',
 		alpha2code: 'TW',
 		alpha3code: 'TWN',
 		latitude: 23.69781,
