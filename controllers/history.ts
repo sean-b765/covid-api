@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import moment from 'moment'
 import History from '../models/History'
-import { Record } from '../types'
+import { RawHistoricalRecord } from '../types'
 
 export const getHistoricalData = async (req: Request, res: Response) => {
 	try {

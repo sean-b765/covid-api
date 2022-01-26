@@ -1,9 +1,9 @@
 import mongoose from 'mongoose'
-import { RawData } from '../types'
+import { HistoricalRecord } from '../types'
 
 export interface IHistory extends mongoose.Document {
 	location: string
-	data: Array<RawData>
+	data: Array<HistoricalRecord>
 }
 
 const historySchema = new mongoose.Schema({

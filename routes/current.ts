@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getCurrentData } from '../lib/helpers'
+import { getCurrentData } from '../lib/data'
 
 const router = Router()
 

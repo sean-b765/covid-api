@@ -5,8 +5,7 @@ import historyRoutes from './routes/history'
 import homeRoute from './routes/home'
 import currentRoutes from './routes/current'
 import cors from 'cors'
-import { appendData, getAllData } from './lib/helpers'
-import moment from 'moment'
+import { dailyUpdate, initialFetch } from './lib/data'
 
 dotenv.config()
 
@@ -38,11 +37,7 @@ app.listen(PORT, () => {
 // IIFE
 // Run every 50 minutes, executes appendData every few hours
 ;(function dailyTimer() {
-	const hrs = moment().hours()
-	// this array specifies the hours of the day which appendData() should be called
-	const updateHours = [1, 4, 7, 10, 13, 16, 19, 22]
+	dailyUpdate()
 
-	if (updateHours.includes(hrs)) appendData()
-
-	setTimeout(dailyTimer, 1000 * 60 * 50)
+	setTimeout(dailyTimer, 1000 * 60 * 60 * 2)
 })()
