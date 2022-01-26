@@ -10,7 +10,7 @@ const history_1 = __importDefault(require("./routes/history"));
 const home_1 = __importDefault(require("./routes/home"));
 const current_1 = __importDefault(require("./routes/current"));
 const cors_1 = __importDefault(require("cors"));
-const helpers_1 = require("./lib/helpers");
+const data_1 = require("./lib/data");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 mongoose_1.default.connect(process.env.MONGO_URL, () => {
@@ -30,7 +30,7 @@ app.listen(PORT, () => {
     console.log(`Express listening on port ${PORT}`);
 });
 (function dailyTimer() {
-    (0, helpers_1.appendData)();
-    setTimeout(dailyTimer, 1000 * 60 * 60 * 12);
+    (0, data_1.dailyUpdate)();
+    setTimeout(dailyTimer, 1000 * 60 * 60 * 2);
 })();
 //# sourceMappingURL=index.js.map

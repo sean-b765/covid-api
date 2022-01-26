@@ -33,7 +33,7 @@ const dailyUpdate = () => {
     Key_1.default.findOne()
         .then((response) => __awaiter(void 0, void 0, void 0, function* () {
         // If it has not been 12 hours since the last update, don't continue
-        if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(12, 'hours')))
+        if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(0, 'hours')))
             return;
         // Check for the latest data in JHU repository
         yield (0, exports.getCurrentData)(appendCurrentDocs);
@@ -56,9 +56,7 @@ const initialFetch = () => {
     // Remove the existing Key
     Key_1.default.remove();
     // Create new Key
-    Key_1.default.create({ lastPullDate: (0, moment_1.default)().format() }).then(() => {
-        console.log('Initialised MongoDB with historical and current COVID data.');
-    });
+    Key_1.default.create({ lastPullDate: (0, moment_1.default)().format() }).then(() => { });
 };
 exports.initialFetch = initialFetch;
 /*
@@ -125,7 +123,7 @@ const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
     const records = yield (0, csvtojson_1.default)().fromString(res.data);
     try {
         const dateNow = (0, moment_1.default)().format('YYYY-MM-DD');
-        console.log(`DB_UPDATE::${dateNow} - Starting daily DB update.`);
+        console.log(`HISTORICAL::${dateNow} - Starting daily update`);
         // Filter the array by only World records
         const csvArray = records.filter((item) => item.location === 'World');
         // The last index of the array will be the latest record
@@ -138,10 +136,10 @@ const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
         // Exit if no update is required,
         //  i.e. DB latest record date is the same as CSV data date
         if (latestInDb.date === latestAvailableDate) {
-            console.log(`DB_UPDATE::${dateNow} - Already up-to-date, daily update not needed - latest available from source: ${latestAvailableDate}`);
+            console.log(`HISTORICAL::${dateNow} - Already up-to-date, daily update not needed.`);
             return;
         }
-        console.log(`DB_UPDATE::${dateNow} - Adding data after ${latestInDb.date}`);
+        console.log(`HISTORICAL::${dateNow} - Adding data after ${latestInDb.date}`);
         // We need to filter JHU data by date to isolate the newest data
         const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(latestInDb.date));
         // Map through existing documents,
@@ -167,22 +165,21 @@ const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
             // save the document
             yield document.save();
         }));
-        console.log(`DB_UPDATE::${dateNow} - Daily update completed. Added data from ${(0, moment_1.default)(latestInDb.date)
-            .add(1, 'day')
-            .format('YYYY-MM-DD')} to ${latestAvailableDate}, inclusive.`);
+        console.log(`HISTORICAL::${dateNow} - Daily update completed.`);
     }
     catch (err) {
         console.log(err);
-        console.log(`DB_UPDATE::${(0, moment_1.default)().format('YYYY-MM-DD')} - Error/exiting.`);
+        console.log(`HISTORICAL::${(0, moment_1.default)().format('YYYY-MM-DD')} - Error/exiting`);
     }
 });
 exports.appendHistorical = appendHistorical;
 /**
  * Get latest current data
- * @param handleFn
+ * @param createFn The function
  */
-const getCurrentData = (handleFn) => __awaiter(void 0, void 0, void 0, function* () {
+const getCurrentData = (createFn) => __awaiter(void 0, void 0, void 0, function* () {
     let response = 0, pass = 0, _records;
+    console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Fetching...`);
     // If response is 404, there is no csv data for the date.
     //  200 indicates a hit and will stop the loop
     do {
@@ -195,13 +192,14 @@ const getCurrentData = (handleFn) => __awaiter(void 0, void 0, void 0, function*
         response = status;
         if (records)
             _records = records;
-        console.log(`Records ${records}`);
         pass++;
     } while (response === 404);
     if (!_records)
         return;
     // Handle the records
-    handleFn(_records);
+    console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Processing data...`);
+    createFn(_records);
+    console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Created documents. Data added.`);
 });
 exports.getCurrentData = getCurrentData;
 /**
@@ -340,10 +338,19 @@ const createCurrentDocs = (records) => {
     }));
 };
 /**
- * Appends current data to MongoDB documents
+ * Updates current MongoDB documents
  * @param records records returned from fetch function
  */
 const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, function* () {
     const { dictionary } = parseCurrentRecords(records);
+    // Simply loop through and set properties
+    Object.values(dictionary).forEach((value) => __awaiter(void 0, void 0, void 0, function* () {
+        const current = yield Current_1.default.findOne({ location: value.location });
+        current.cumulative = value.cumulative;
+        current.deaths = value.deaths;
+        current.provinces = value.provinces;
+        current.recovered = value.recovered;
+        yield current.save();
+    }));
 });
-//# sourceMappingURL=helpers.js.map
+//# sourceMappingURL=data.js.map
