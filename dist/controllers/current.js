@@ -12,9 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentData = void 0;
+exports.getAllCurrent = exports.getLocationCurrent = void 0;
 const Current_1 = __importDefault(require("../models/Current"));
-const getCurrentData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getLocationCurrent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { location } = req.params;
         const result = yield Current_1.default.find({ location });
@@ -26,5 +26,17 @@ const getCurrentData = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return res.sendStatus(500);
     }
 });
-exports.getCurrentData = getCurrentData;
+exports.getLocationCurrent = getLocationCurrent;
+const getAllCurrent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield Current_1.default.find();
+        if (!result)
+            return res.status(400).json({ message: 'No results found.' });
+        res.status(200).json(result);
+    }
+    catch (err) {
+        return res.sendStatus(500);
+    }
+});
+exports.getAllCurrent = getAllCurrent;
 //# sourceMappingURL=current.js.map
