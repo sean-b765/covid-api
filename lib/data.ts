@@ -43,8 +43,8 @@ export const dailyUpdate = () => {
 }
 
 /*
-	For the first initialization of the database
-*/
+	 For the first initialization of the database
+ */
 export const initialFetch = () => {
 	getHistoricalData()
 	getCurrentData(createCurrentDocs)
@@ -57,8 +57,8 @@ export const initialFetch = () => {
 }
 
 /*
-  Should only be called for first initialization
-*/
+	 Should only be called for first initialization
+ */
 export const getHistoricalData = () => {
 	axios
 		.get(process.env.SOURCE_URL)
@@ -120,8 +120,8 @@ export const getHistoricalData = () => {
 }
 
 /*
-  Function ran on a timer to update collection daily
-*/
+	 Function ran on a timer to update collection daily
+ */
 export const appendHistorical = async () => {
 	const res = await axios.get(process.env.SOURCE_URL)
 	const records: RawHistoricalRecord[] = await csv().fromString(res.data)

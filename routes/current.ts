@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { getCurrentData } from '../lib/data'
+import { getCurrentData } from '../controllers/current'
 
 const router = Router()
 
-router.get('/history/:location', getCurrentData)
+router.get('/current/:location', getCurrentData)
 
 export default router

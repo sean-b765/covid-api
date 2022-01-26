@@ -16,7 +16,8 @@ exports.getCurrentData = void 0;
 const Current_1 = __importDefault(require("../models/Current"));
 const getCurrentData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield Current_1.default.find();
+        const { location } = req.params;
+        const result = yield Current_1.default.find({ location });
         if (!result)
             return res.status(400).json({ message: 'No results found.' });
         res.status(200).json(result);

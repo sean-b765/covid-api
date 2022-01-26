@@ -33,7 +33,7 @@ const dailyUpdate = () => {
     Key_1.default.findOne()
         .then((response) => __awaiter(void 0, void 0, void 0, function* () {
         // If it has not been 12 hours since the last update, don't continue
-        if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(0, 'hours')))
+        if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(12, 'hours')))
             return;
         // Check for the latest data in JHU repository
         yield (0, exports.getCurrentData)(appendCurrentDocs);
@@ -48,8 +48,8 @@ const dailyUpdate = () => {
 };
 exports.dailyUpdate = dailyUpdate;
 /*
-    For the first initialization of the database
-*/
+     For the first initialization of the database
+ */
 const initialFetch = () => {
     (0, exports.getHistoricalData)();
     (0, exports.getCurrentData)(createCurrentDocs);
@@ -60,8 +60,8 @@ const initialFetch = () => {
 };
 exports.initialFetch = initialFetch;
 /*
-  Should only be called for first initialization
-*/
+     Should only be called for first initialization
+ */
 const getHistoricalData = () => {
     axios_1.default
         .get(process.env.SOURCE_URL)
@@ -116,8 +116,8 @@ const getHistoricalData = () => {
 };
 exports.getHistoricalData = getHistoricalData;
 /*
-  Function ran on a timer to update collection daily
-*/
+     Function ran on a timer to update collection daily
+ */
 const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
     const res = yield axios_1.default.get(process.env.SOURCE_URL);
     const records = yield (0, csvtojson_1.default)().fromString(res.data);
