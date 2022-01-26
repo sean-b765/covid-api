@@ -224,7 +224,7 @@ export const getCurrentData = async (createFn: Function) => {
 
 	// Handle the records
 	console.log(`CURRENT::${moment().format('YYYY-MM-DD')} - Processing data...`)
-	createFn(_records)
+	await createFn(_records)
 
 	console.log(
 		`CURRENT::${moment().format('YYYY-MM-DD')} - Created documents. Data added.`
@@ -413,10 +413,23 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 	Object.values(dictionary).forEach(async (value) => {
 		const current = await Current.findOne({ location: value.location })
 
-		current.cumulative = value.cumulative
-		current.deaths = value.deaths
+		if (current.provinces.length === 0) {
+			current.cumulative = `${value.provinces
+				.map((item) => Number(item.cumulative))
+				.reduce((prev, next) => prev + next)}`
+			current.deaths = `${value.provinces
+				.map((item) => Number(item.deaths))
+				.reduce((prev, next) => prev + next)}`
+			current.recovered = `${value.provinces
+				.map((item) => Number(item.recovered))
+				.reduce((prev, next) => prev + next)}`
+		} else {
+			current.cumulative = value.cumulative
+			current.deaths = value.deaths
+			current.recovered = value.recovered
+		}
+
 		current.provinces = value.provinces
-		current.recovered = value.recovered
 
 		await current.save()
 	})

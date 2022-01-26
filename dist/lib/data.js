@@ -198,7 +198,7 @@ const getCurrentData = (createFn) => __awaiter(void 0, void 0, void 0, function*
         return;
     // Handle the records
     console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Processing data...`);
-    createFn(_records);
+    yield createFn(_records);
     console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Created documents. Data added.`);
 });
 exports.getCurrentData = getCurrentData;
@@ -346,10 +346,23 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
     // Simply loop through and set properties
     Object.values(dictionary).forEach((value) => __awaiter(void 0, void 0, void 0, function* () {
         const current = yield Current_1.default.findOne({ location: value.location });
-        current.cumulative = value.cumulative;
-        current.deaths = value.deaths;
+        if (current.provinces.length === 0) {
+            current.cumulative = `${value.provinces
+                .map((item) => Number(item.cumulative))
+                .reduce((prev, next) => prev + next)}`;
+            current.deaths = `${value.provinces
+                .map((item) => Number(item.deaths))
+                .reduce((prev, next) => prev + next)}`;
+            current.recovered = `${value.provinces
+                .map((item) => Number(item.recovered))
+                .reduce((prev, next) => prev + next)}`;
+        }
+        else {
+            current.cumulative = value.cumulative;
+            current.deaths = value.deaths;
+            current.recovered = value.recovered;
+        }
         current.provinces = value.provinces;
-        current.recovered = value.recovered;
         yield current.save();
     }));
 });
