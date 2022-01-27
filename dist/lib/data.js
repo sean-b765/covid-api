@@ -195,7 +195,7 @@ const getCurrentData = (createFn) => __awaiter(void 0, void 0, void 0, function*
             _records = records;
         console.log(`Status: ${status}. ${status === 200 && records.length}`);
         pass++;
-    } while (response === 404);
+    } while (response === 404 && pass < 10);
     if (!_records)
         return;
     // Handle the records
