@@ -188,10 +188,12 @@ const getCurrentData = (createFn) => __awaiter(void 0, void 0, void 0, function*
             : (0, moment_1.default)()
                 .subtract(pass, pass === 1 ? 'day' : 'days')
                 .format('MM-DD-YYYY');
+        console.log(`Fetch attempt ${date}`);
         const { status, records } = yield fetchCurrent(date);
         response = status;
         if (records)
             _records = records;
+        console.log(`Status: ${status}. ${status === 200 && records.length}`);
         pass++;
     } while (response === 404);
     if (!_records)

@@ -213,9 +213,13 @@ export const getCurrentData = async (createFn: Function) => {
 						.subtract(pass, pass === 1 ? 'day' : 'days')
 						.format('MM-DD-YYYY')
 
+		console.log(`Fetch attempt ${date}`)
+
 		const { status, records } = await fetchCurrent(date)
 		response = status
 		if (records) _records = records
+
+		console.log(`Status: ${status}. ${status === 200 && records.length}`)
 
 		pass++
 	} while (response === 404)
