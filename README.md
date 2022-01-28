@@ -7,14 +7,18 @@ A worker thread is used to perform daily updates. Due to the free heroku plan id
 ## List all Locations
 
 _Some listings (e.g. Bermuda) are provinces belonging to a larger territory. Current data does not list Bermuda, as it is a province of the United Kingdom_
+
 https://covid-history.herokuapp.com/locations
 
 ## Historical data
 
 Use (almost) all countries from `/locations` route, or continents, or World
 e.g.
+
 https://covid-history.herokuapp.com/history/World
+
 https://covid-history.herokuapp.com/history/North%20America
+
 https://covid-history.herokuapp.com/history/India
 
 ```ts
@@ -42,7 +46,9 @@ type response = [
 
 Will return a total for the country, as well as all provinces (if there data exists)
 e.g.
+
 https://covid-history.herokuapp.com/current/Australia
+
 https://covid-history.herokuapp.com/current/United%20Kingdom
 
 ```ts
