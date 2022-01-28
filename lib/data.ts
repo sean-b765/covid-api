@@ -75,9 +75,6 @@ export const getHistoricalData = () => {
 
 					res.map((record) => {
 						// Already have an existing location key
-						// test
-						if (record.date === '2022-01-20' || record.date === '2022-01-19')
-							return
 
 						if (Object.keys(_obj).includes(record.location)) {
 							_obj[record.location].data.push({
@@ -123,10 +120,11 @@ export const getHistoricalData = () => {
 	 Function ran on a timer to update collection daily
  */
 export const appendHistorical = async () => {
-	const res = await axios.get(process.env.SOURCE_URL)
-	const records: RawHistoricalRecord[] = await csv().fromString(res.data)
-
 	try {
+		let result = await axios.get(process.env.SOURCE_URL)
+
+		const records: RawHistoricalRecord[] = await csv().fromString(result.data)
+
 		const dateNow = moment().format('YYYY-MM-DD')
 
 		console.log(`HISTORICAL::${dateNow} - Starting daily update`)
@@ -140,7 +138,7 @@ export const appendHistorical = async () => {
 		const documents = await History.find()
 
 		// Single test document to find latest date in data array
-		const worldDocument = documents.filter((doc) => doc.location === 'World')[0]
+		const worldDocument = await History.findOne({ location: 'World' })
 
 		const latestInDb = worldDocument.data[worldDocument.data.length - 1]
 
@@ -417,7 +415,7 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 	Object.values(dictionary).forEach(async (value) => {
 		const current = await Current.findOne({ location: value.location })
 
-		if (current.provinces.length === 0) {
+		if (current.provinces.length !== 0) {
 			current.cumulative = `${value.provinces
 				.map((item) => Number(item.cumulative))
 				.reduce((prev, next) => prev + next)}`

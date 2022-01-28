@@ -76,9 +76,6 @@ const getHistoricalData = () => {
             let _obj = {};
             res.map((record) => {
                 // Already have an existing location key
-                // test
-                if (record.date === '2022-01-20' || record.date === '2022-01-19')
-                    return;
                 if (Object.keys(_obj).includes(record.location)) {
                     _obj[record.location].data.push({
                         date: record.date,
@@ -119,9 +116,9 @@ exports.getHistoricalData = getHistoricalData;
      Function ran on a timer to update collection daily
  */
 const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
-    const res = yield axios_1.default.get(process.env.SOURCE_URL);
-    const records = yield (0, csvtojson_1.default)().fromString(res.data);
     try {
+        let result = yield axios_1.default.get(process.env.SOURCE_URL);
+        const records = yield (0, csvtojson_1.default)().fromString(result.data);
         const dateNow = (0, moment_1.default)().format('YYYY-MM-DD');
         console.log(`HISTORICAL::${dateNow} - Starting daily update`);
         // Filter the array by only World records
@@ -131,7 +128,7 @@ const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
         // Get all History data from Mongo
         const documents = yield History_1.default.find();
         // Single test document to find latest date in data array
-        const worldDocument = documents.filter((doc) => doc.location === 'World')[0];
+        const worldDocument = yield History_1.default.findOne({ location: 'World' });
         const latestInDb = worldDocument.data[worldDocument.data.length - 1];
         // Exit if no update is required,
         //  i.e. DB latest record date is the same as CSV data date
@@ -348,7 +345,7 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
     // Simply loop through and set properties
     Object.values(dictionary).forEach((value) => __awaiter(void 0, void 0, void 0, function* () {
         const current = yield Current_1.default.findOne({ location: value.location });
-        if (current.provinces.length === 0) {
+        if (current.provinces.length !== 0) {
             current.cumulative = `${value.provinces
                 .map((item) => Number(item.cumulative))
                 .reduce((prev, next) => prev + next)}`;
