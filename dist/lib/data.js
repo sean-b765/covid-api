@@ -32,6 +32,7 @@ const Key_1 = __importDefault(require("../models/Key"));
 const dailyUpdate = () => {
     Key_1.default.findOne()
         .then((response) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log(`WORKER::${(0, moment_1.default)().format('YYYY-MM-DD')} - Checking lastPullDate`);
         // If it has not been 12 hours since the last update, don't continue
         if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(12, 'hours'))) {
             console.log(`WORKER::${(0, moment_1.default)().format('YYYY-MM-DD')} - No update needed`);
@@ -42,6 +43,7 @@ const dailyUpdate = () => {
         yield (0, exports.getCurrentData)(appendCurrentDocs);
         // Check for latest historical data - OWID repo
         yield (0, exports.appendHistorical)();
+        console.log(`WORKER::${(0, moment_1.default)().format('YYYY-MM-DD')} - DB update complete`);
         // Set the latestPullDate
         response.lastPullDate = (0, moment_1.default)().format();
         // Save the date Key
@@ -117,56 +119,65 @@ const getHistoricalData = () => {
         .catch((err) => console.log(err));
 };
 exports.getHistoricalData = getHistoricalData;
+const getSourceData = () => __awaiter(void 0, void 0, void 0, function* () {
+    const data = yield axios_1.default.get(process.env.SOURCE_URL);
+    return data.data;
+});
+/**
+ * Returns a promise which is fulfilled after ALL documents have been updated with newData
+ * @param newData new data to be added
+ * @returns Promise
+ */
+const updateDocs = (newData) => __awaiter(void 0, void 0, void 0, function* () {
+    // For all new data we should find the corresponding location and push the data to the data array
+    return Promise.all(newData.map((datum) => __awaiter(void 0, void 0, void 0, function* () {
+        yield History_1.default.findOneAndUpdate({ location: datum.location }, {
+            $push: {
+                data: {
+                    date: datum.date,
+                    total_cases: datum.total_cases,
+                    total_deaths: datum.total_deaths,
+                    new_cases: datum.new_cases,
+                    new_deaths: datum.new_deaths,
+                    weekly_cases: datum.weekly_cases,
+                    weekly_deaths: datum.weekly_deaths,
+                    biweekly_cases: datum.biweekly_cases,
+                    biweekly_deaths: datum.biweekly_deaths,
+                },
+            },
+        });
+    })));
+});
 /*
-     Function ran on a timer to update collection daily
+    Function ran on a timer to update collection daily
  */
 const appendHistorical = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let result = yield axios_1.default.get(process.env.SOURCE_URL);
-        const records = yield (0, csvtojson_1.default)().fromString(result.data);
+        // Single test document to find latest date in data array
+        let latestInDb = yield History_1.default.findOne({ location: 'World' }, { data: { $slice: -1 } });
+        const latestDbDate = latestInDb.data[0].date;
+        let data = yield (0, csvtojson_1.default)().fromString(yield getSourceData());
         const dateNow = (0, moment_1.default)().format('YYYY-MM-DD');
         console.log(`HISTORICAL::${dateNow} - Starting daily update`);
         // Filter the array by only World records
-        const csvArray = records.filter((item) => item.location === 'World');
+        let latestAvailableDate = data.filter((item) => item.location === 'World');
         // The last index of the array will be the latest record
-        const latestAvailableDate = csvArray[csvArray.length - 1].date;
-        // Get all History data from Mongo
-        const documents = yield History_1.default.find();
-        // Single test document to find latest date in data array
-        const worldDocument = yield History_1.default.findOne({ location: 'World' });
-        const latestInDb = worldDocument.data[worldDocument.data.length - 1];
+        latestAvailableDate =
+            latestAvailableDate[latestAvailableDate.length - 1].date;
         // Exit if no update is required,
         //  i.e. DB latest record date is the same as CSV data date
-        if (latestInDb.date === latestAvailableDate) {
+        if (latestDbDate === latestAvailableDate) {
             console.log(`HISTORICAL::${dateNow} - Already up-to-date, daily update not needed.`);
             return;
         }
-        console.log(`HISTORICAL::${dateNow} - Adding data after ${latestInDb.date}`);
+        console.log(`HISTORICAL::${dateNow} - Adding data after ${latestDbDate}`);
         // We need to filter JHU data by date to isolate the newest data
-        const newData = records.filter((record) => (0, moment_1.default)(record.date).isAfter(latestInDb.date));
-        // Map through existing documents,
-        //  pushing new data to the 'data' field
-        documents.forEach((document) => __awaiter(void 0, void 0, void 0, function* () {
-            // filter the new JHU data,
-            //  push each new record to the document.data array
-            newData.filter((data) => {
-                if (data.location !== document.location)
-                    return;
-                document.data.push({
-                    date: data.date,
-                    total_cases: data.total_cases,
-                    total_deaths: data.total_deaths,
-                    new_cases: data.new_cases,
-                    new_deaths: data.new_deaths,
-                    weekly_cases: data.weekly_cases,
-                    weekly_deaths: data.weekly_deaths,
-                    biweekly_cases: data.biweekly_cases,
-                    biweekly_deaths: data.biweekly_deaths,
-                });
-            });
-            // save the document
-            yield document.save();
-        }));
+        let newData = data.filter((record) => (0, moment_1.default)(record.date).isAfter(latestDbDate));
+        // Wait for all newData to be pushed to DB
+        yield updateDocs(newData);
+        latestInDb = null;
+        data = null;
+        newData = null;
         console.log(`HISTORICAL::${dateNow} - Daily update completed.`);
     }
     catch (err) {

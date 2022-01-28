@@ -6,7 +6,8 @@ import homeRoute from './routes/home'
 import currentRoutes from './routes/current'
 import cors from 'cors'
 import { Worker } from 'worker_threads'
-import { dailyUpdate, initialFetch } from './lib/data'
+import History from './models/History'
+import { initialFetch } from './lib/data'
 
 dotenv.config()
 
@@ -34,6 +35,17 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
 	console.log(`Express listening on port ${PORT}`)
 })
+;(async function remove() {
+	// await History.updateMany(
+	// 	{},
+	// 	{
+	// 		$pop: {
+	// 			data: 1,
+	// 		},
+	// 	}
+	// )
+	// console.log('Trimmed one day off')
+})()
 
 // Create a worker thread which handles all the DB updates
 new Worker('./dist/worker.js')

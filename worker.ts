@@ -14,12 +14,6 @@ mongoose.connect(process.env.MONGO_URL, () => {
 
 // Check if DB needs update every few hours
 //  if the lastPullDate was atleast 12 hours ago, it will update the DB
-;(function dailyTimer() {
-	console.log(
-		`WORKER::${moment().format('YYYY-MM-DD')} - Checking lastPullDate`
-	)
 
-	dailyUpdate()
-
-	setTimeout(dailyTimer, 1000 * 60 * 60 * 2)
-})()
+dailyUpdate()
+// const id = setInterval(dailyUpdate, 1000 * 60 * 60 * 2)
