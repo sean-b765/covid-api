@@ -24,6 +24,10 @@ import Key from '../models/Key'
 export const dailyUpdate = () => {
 	Key.findOne()
 		.then(async (response) => {
+			console.log(
+				`WORKER::${moment().format('YYYY-MM-DD')} - Checking lastPullDate`
+			)
+
 			// If it has not been 12 hours since the last update, don't continue
 			if (!moment().isAfter(moment(response.lastPullDate).add(12, 'hours'))) {
 				console.log(
@@ -41,6 +45,10 @@ export const dailyUpdate = () => {
 			await getCurrentData(appendCurrentDocs)
 			// Check for latest historical data - OWID repo
 			await appendHistorical()
+
+			console.log(
+				`WORKER::${moment().format('YYYY-MM-DD')} - DB update complete`
+			)
 
 			// Set the latestPullDate
 			response.lastPullDate = moment().format()
@@ -127,72 +135,91 @@ export const getHistoricalData = () => {
 		.catch((err) => console.log(err))
 }
 
+const getSourceData = async () => {
+	const data = await axios.get(process.env.SOURCE_URL)
+	return data.data
+}
+
+/**
+ * Returns a promise which is fulfilled after ALL documents have been updated with newData
+ * @param newData new data to be added
+ * @returns Promise
+ */
+const updateDocs = async (newData: RawHistoricalRecord[]) => {
+	// For all new data we should find the corresponding location and push the data to the data array
+	return Promise.all(
+		newData.map(async (datum) => {
+			await History.findOneAndUpdate(
+				{ location: datum.location },
+				{
+					$push: {
+						data: {
+							date: datum.date,
+							total_cases: datum.total_cases,
+							total_deaths: datum.total_deaths,
+							new_cases: datum.new_cases,
+							new_deaths: datum.new_deaths,
+							weekly_cases: datum.weekly_cases,
+							weekly_deaths: datum.weekly_deaths,
+							biweekly_cases: datum.biweekly_cases,
+							biweekly_deaths: datum.biweekly_deaths,
+						},
+					},
+				}
+			)
+		})
+	)
+}
+
 /*
-	 Function ran on a timer to update collection daily
+	Function ran on a timer to update collection daily
  */
 export const appendHistorical = async () => {
 	try {
-		let result = await axios.get(process.env.SOURCE_URL)
+		// Single test document to find latest date in data array
+		let latestInDb: any = await History.findOne(
+			{ location: 'World' },
+			{ data: { $slice: -1 } }
+		)
 
-		const records: RawHistoricalRecord[] = await csv().fromString(result.data)
+		const latestDbDate = latestInDb.data[0].date
+
+		let data = await csv().fromString(await getSourceData())
 
 		const dateNow = moment().format('YYYY-MM-DD')
 
 		console.log(`HISTORICAL::${dateNow} - Starting daily update`)
 
 		// Filter the array by only World records
-		const csvArray = records.filter((item) => item.location === 'World')
+		let latestAvailableDate = data.filter(
+			(item: RawHistoricalRecord) => item.location === 'World'
+		)
 		// The last index of the array will be the latest record
-		const latestAvailableDate = csvArray[csvArray.length - 1].date
-
-		// Get all History data from Mongo
-		const documents = await History.find()
-
-		// Single test document to find latest date in data array
-		const worldDocument = await History.findOne({ location: 'World' })
-
-		const latestInDb = worldDocument.data[worldDocument.data.length - 1]
+		latestAvailableDate =
+			latestAvailableDate[latestAvailableDate.length - 1].date
 
 		// Exit if no update is required,
 		//  i.e. DB latest record date is the same as CSV data date
-		if (latestInDb.date === latestAvailableDate) {
+		if (latestDbDate === latestAvailableDate) {
 			console.log(
 				`HISTORICAL::${dateNow} - Already up-to-date, daily update not needed.`
 			)
 			return
 		}
 
-		console.log(`HISTORICAL::${dateNow} - Adding data after ${latestInDb.date}`)
+		console.log(`HISTORICAL::${dateNow} - Adding data after ${latestDbDate}`)
 
 		// We need to filter JHU data by date to isolate the newest data
-		const newData = records.filter((record) =>
-			moment(record.date).isAfter(latestInDb.date)
+		let newData = data.filter((record) =>
+			moment(record.date).isAfter(latestDbDate)
 		)
 
-		// Map through existing documents,
-		//  pushing new data to the 'data' field
-		documents.forEach(async (document) => {
-			// filter the new JHU data,
-			//  push each new record to the document.data array
-			newData.filter((data) => {
-				if (data.location !== document.location) return
+		// Wait for all newData to be pushed to DB
+		await updateDocs(newData)
 
-				document.data.push({
-					date: data.date,
-					total_cases: data.total_cases,
-					total_deaths: data.total_deaths,
-					new_cases: data.new_cases,
-					new_deaths: data.new_deaths,
-					weekly_cases: data.weekly_cases,
-					weekly_deaths: data.weekly_deaths,
-					biweekly_cases: data.biweekly_cases,
-					biweekly_deaths: data.biweekly_deaths,
-				})
-			})
-
-			// save the document
-			await document.save()
-		})
+		latestInDb = null
+		data = null
+		newData = null
 
 		console.log(`HISTORICAL::${dateNow} - Daily update completed.`)
 	} catch (err) {
