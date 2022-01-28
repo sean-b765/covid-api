@@ -266,9 +266,7 @@ export const getCurrentData = async (createFn: Function) => {
 	console.log(`CURRENT::${moment().format('YYYY-MM-DD')} - Processing data...`)
 	await createFn(_records)
 
-	console.log(
-		`CURRENT::${moment().format('YYYY-MM-DD')} - Created documents. Data added.`
-	)
+	console.log(`CURRENT::${moment().format('YYYY-MM-DD')} - Data added`)
 }
 
 type CurrentDictionary = {
@@ -449,28 +447,31 @@ const createCurrentDocs = (records: RawCurrentRecord[]) => {
 const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 	const { dictionary } = parseCurrentRecords(records)
 
-	// Simply loop through and set properties
-	Object.values(dictionary).forEach(async (value) => {
-		const current = await Current.findOne({ location: value.location })
+	// Simply loop through and set properties.
+	//  use Promise.all to wait for all operations to complete
+	await Promise.all(
+		Object.values(dictionary).map(async (value) => {
+			const current = await Current.findOne({ location: value.location })
 
-		if (current.provinces.length !== 0) {
-			current.cumulative = `${value.provinces
-				.map((item) => Number(item.cumulative))
-				.reduce((prev, next) => prev + next)}`
-			current.deaths = `${value.provinces
-				.map((item) => Number(item.deaths))
-				.reduce((prev, next) => prev + next)}`
-			current.recovered = `${value.provinces
-				.map((item) => Number(item.recovered))
-				.reduce((prev, next) => prev + next)}`
-		} else {
-			current.cumulative = value.cumulative
-			current.deaths = value.deaths
-			current.recovered = value.recovered
-		}
+			if (current.provinces.length !== 0) {
+				current.cumulative = `${value.provinces
+					.map((item) => Number(item.cumulative))
+					.reduce((prev, next) => prev + next)}`
+				current.deaths = `${value.provinces
+					.map((item) => Number(item.deaths))
+					.reduce((prev, next) => prev + next)}`
+				current.recovered = `${value.provinces
+					.map((item) => Number(item.recovered))
+					.reduce((prev, next) => prev + next)}`
+			} else {
+				current.cumulative = value.cumulative
+				current.deaths = value.deaths
+				current.recovered = value.recovered
+			}
 
-		current.provinces = value.provinces
+			current.provinces = value.provinces
 
-		await current.save()
-	})
+			await current.save()
+		})
+	)
 }

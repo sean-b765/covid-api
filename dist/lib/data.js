@@ -214,7 +214,7 @@ const getCurrentData = (createFn) => __awaiter(void 0, void 0, void 0, function*
     // Handle the records
     console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Processing data...`);
     yield createFn(_records);
-    console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Created documents. Data added.`);
+    console.log(`CURRENT::${(0, moment_1.default)().format('YYYY-MM-DD')} - Data added`);
 });
 exports.getCurrentData = getCurrentData;
 /**
@@ -358,8 +358,9 @@ const createCurrentDocs = (records) => {
  */
 const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, function* () {
     const { dictionary } = parseCurrentRecords(records);
-    // Simply loop through and set properties
-    Object.values(dictionary).forEach((value) => __awaiter(void 0, void 0, void 0, function* () {
+    // Simply loop through and set properties.
+    //  use Promise.all to wait for all operations to complete
+    yield Promise.all(Object.values(dictionary).map((value) => __awaiter(void 0, void 0, void 0, function* () {
         const current = yield Current_1.default.findOne({ location: value.location });
         if (current.provinces.length !== 0) {
             current.cumulative = `${value.provinces
@@ -379,6 +380,6 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
         }
         current.provinces = value.provinces;
         yield current.save();
-    }));
+    })));
 });
 //# sourceMappingURL=data.js.map
