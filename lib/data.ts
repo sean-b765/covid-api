@@ -25,8 +25,17 @@ export const dailyUpdate = () => {
 	Key.findOne()
 		.then(async (response) => {
 			// If it has not been 12 hours since the last update, don't continue
-			if (!moment().isAfter(moment(response.lastPullDate).add(12, 'hours')))
+			if (!moment().isAfter(moment(response.lastPullDate).add(12, 'hours'))) {
+				console.log(
+					`WORKER::${moment().format('YYYY-MM-DD')} - No update needed`
+				)
+
 				return
+			}
+
+			console.log(
+				`WORKER::${moment().format('YYYY-MM-DD')} - Performing DB update`
+			)
 
 			// Check for the latest data in JHU repository
 			await getCurrentData(appendCurrentDocs)
@@ -39,7 +48,9 @@ export const dailyUpdate = () => {
 			// Save the date Key
 			await response.save()
 		})
-		.catch(() => {})
+		.catch((err) => {
+			console.log(err)
+		})
 }
 
 /*

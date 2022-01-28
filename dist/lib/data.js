@@ -33,8 +33,11 @@ const dailyUpdate = () => {
     Key_1.default.findOne()
         .then((response) => __awaiter(void 0, void 0, void 0, function* () {
         // If it has not been 12 hours since the last update, don't continue
-        if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(12, 'hours')))
+        if (!(0, moment_1.default)().isAfter((0, moment_1.default)(response.lastPullDate).add(12, 'hours'))) {
+            console.log(`WORKER::${(0, moment_1.default)().format('YYYY-MM-DD')} - No update needed`);
             return;
+        }
+        console.log(`WORKER::${(0, moment_1.default)().format('YYYY-MM-DD')} - Performing DB update`);
         // Check for the latest data in JHU repository
         yield (0, exports.getCurrentData)(appendCurrentDocs);
         // Check for latest historical data - OWID repo
@@ -44,7 +47,9 @@ const dailyUpdate = () => {
         // Save the date Key
         yield response.save();
     }))
-        .catch(() => { });
+        .catch((err) => {
+        console.log(err);
+    });
 };
 exports.dailyUpdate = dailyUpdate;
 /*

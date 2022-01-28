@@ -5,6 +5,7 @@ import historyRoutes from './routes/history'
 import homeRoute from './routes/home'
 import currentRoutes from './routes/current'
 import cors from 'cors'
+import { Worker } from 'worker_threads'
 import { dailyUpdate, initialFetch } from './lib/data'
 
 dotenv.config()
@@ -34,10 +35,5 @@ app.listen(PORT, () => {
 	console.log(`Express listening on port ${PORT}`)
 })
 
-// IIFE
-// Run every 50 minutes, executes appendData every few hours
-;(function dailyTimer() {
-	dailyUpdate()
-
-	setTimeout(dailyTimer, 1000 * 60 * 60 * 2)
-})()
+// Create a worker thread which handles all the DB updates
+new Worker('./dist/worker.js')

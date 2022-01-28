@@ -10,7 +10,7 @@ const history_1 = __importDefault(require("./routes/history"));
 const home_1 = __importDefault(require("./routes/home"));
 const current_1 = __importDefault(require("./routes/current"));
 const cors_1 = __importDefault(require("cors"));
-const data_1 = require("./lib/data");
+const worker_threads_1 = require("worker_threads");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 mongoose_1.default.connect(process.env.MONGO_URL, () => {
@@ -29,8 +29,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Express listening on port ${PORT}`);
 });
-(function dailyTimer() {
-    (0, data_1.dailyUpdate)();
-    setTimeout(dailyTimer, 1000 * 60 * 60 * 2);
-})();
+// Create a worker thread which handles all the DB updates
+new worker_threads_1.Worker('./dist/worker.js');
 //# sourceMappingURL=index.js.map
