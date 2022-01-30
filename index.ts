@@ -36,17 +36,17 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
 	console.log(`Express listening on port ${PORT}`)
 })
-;(async function remove() {
-	// await History.updateMany(
-	// 	{},
-	// 	{
-	// 		$pop: {
-	// 			data: 1,
-	// 		},
-	// 	}
-	// )
-	// console.log('Trimmed one day off')
-})()
+// ;(async function remove() {
+// 	await History.updateMany(
+// 		{},
+// 		{
+// 			$pop: {
+// 				data: 1,
+// 			},
+// 		}
+// 	)
+// 	console.log('Trimmed 1 day off')
+// })()
 
 // Create a worker thread which handles all the DB updates
 new Worker('./dist/worker.js')
