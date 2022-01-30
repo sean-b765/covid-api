@@ -4,7 +4,6 @@
  * Description: Worker thread for performing daily DB updates
  */
 
-import moment from 'moment'
 import mongoose from 'mongoose'
 import { dailyUpdate, initialFetch } from './lib/data'
 
@@ -15,5 +14,6 @@ mongoose.connect(process.env.MONGO_URL, () => {
 // Check if DB needs update every few hours
 //  if the lastPullDate was atleast 12 hours ago, it will update the DB
 
+// Every 60 mins - check for daily update
 dailyUpdate()
-// const id = setInterval(dailyUpdate, 1000 * 60 * 60 * 2)
+setInterval(dailyUpdate, 1000 * 60 * 60)

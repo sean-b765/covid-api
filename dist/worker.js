@@ -15,6 +15,7 @@ mongoose_1.default.connect(process.env.MONGO_URL, () => {
 });
 // Check if DB needs update every few hours
 //  if the lastPullDate was atleast 12 hours ago, it will update the DB
+// Every 60 mins - check for daily update
 (0, data_1.dailyUpdate)();
-// const id = setInterval(dailyUpdate, 1000 * 60 * 60 * 2)
+setInterval(data_1.dailyUpdate, 1000 * 60 * 60);
 //# sourceMappingURL=worker.js.map

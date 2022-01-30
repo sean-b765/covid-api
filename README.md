@@ -12,7 +12,7 @@ https://covid-history.herokuapp.com/locations
 
 ## Historical data
 
-Use (almost) all countries from `/locations` route, or continents, or World
+Use (almost) all options from `/locations` route, or continents, or World
 e.g.
 
 https://covid-history.herokuapp.com/history/World
@@ -44,7 +44,7 @@ type response = [
 
 ## Current data
 
-Will return a total for the country, as well as all provinces (if there data exists)
+Will return a total for the country, as well as all provinces (if data exists)
 e.g.
 
 https://covid-history.herokuapp.com/current/Australia

@@ -22,7 +22,8 @@ const cors_1 = __importDefault(require("cors"));
 const worker_threads_1 = require("worker_threads");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-mongoose_1.default.connect(process.env.MONGO_URL, () => {
+// Set readPreference as secondary, as this will allow stale data to be read while the DB is still being updated
+mongoose_1.default.connect(process.env.MONGO_URL, { readPreference: 'secondary' }, () => {
     console.log(`Connected to MongoDB: ${process.env.MONGO_URL}`);
 });
 // Middleware

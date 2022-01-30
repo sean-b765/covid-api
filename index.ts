@@ -13,7 +13,8 @@ dotenv.config()
 
 const app = express()
 
-mongoose.connect(process.env.MONGO_URL, () => {
+// Set readPreference as secondary, as this will allow stale data to be read while the DB is still being updated
+mongoose.connect(process.env.MONGO_URL, { readPreference: 'secondary' }, () => {
 	console.log(`Connected to MongoDB: ${process.env.MONGO_URL}`)
 })
 
