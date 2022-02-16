@@ -453,20 +453,26 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 		Object.values(dictionary).map(async (value) => {
 			const current = await Current.findOne({ location: value.location })
 
-			if (current.provinces.length !== 0) {
-				current.cumulative = `${value.provinces
-					.map((item) => Number(item.cumulative))
-					.reduce((prev, next) => prev + next)}`
-				current.deaths = `${value.provinces
-					.map((item) => Number(item.deaths))
-					.reduce((prev, next) => prev + next)}`
-				current.recovered = `${value.provinces
-					.map((item) => Number(item.recovered))
-					.reduce((prev, next) => prev + next)}`
-			} else {
-				current.cumulative = value.cumulative
-				current.deaths = value.deaths
-				current.recovered = value.recovered
+			try {
+				// If there are provinces present, get the sum of cumulative, deaths, recovered statistics via reduce
+				if (!Boolean(current.provinces.length)) {
+					current.cumulative = `${value.provinces
+						.map((item) => Number(item.cumulative))
+						.reduce((prev, next) => prev + next)}`
+					current.deaths = `${value.provinces
+						.map((item) => Number(item.deaths))
+						.reduce((prev, next) => prev + next)}`
+					current.recovered = `${value.provinces
+						.map((item) => Number(item.recovered))
+						.reduce((prev, next) => prev + next)}`
+				} else {
+					// location contains no provinces, cumulative is already present
+					current.cumulative = value.cumulative
+					current.deaths = value.deaths
+					current.recovered = value.recovered
+				}
+			} catch (err) {
+				console.log(err)
 			}
 
 			current.provinces = value.provinces
