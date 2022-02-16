@@ -451,8 +451,9 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 	//  use Promise.all to wait for all operations to complete
 	await Promise.all(
 		Object.values(dictionary).map(async (value) => {
-			const current = await Current.findOne({ location: value.location })
+			if (!value.location) return
 
+			const current = await Current.findOne({ location: value.location })
 			try {
 				// If there are provinces present, get the sum of cumulative, deaths, recovered statistics via reduce
 				if (current?.provinces?.length) {
@@ -471,13 +472,14 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 					current.deaths = value.deaths
 					current.recovered = value.recovered
 				}
+
+				current.provinces = value.provinces
+
+				await current.save()
 			} catch (err) {
 				console.log(err)
+				console.log(current)
 			}
-
-			current.provinces = value.provinces
-
-			await current.save()
 		})
 	)
 }

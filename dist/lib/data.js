@@ -362,6 +362,8 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
     //  use Promise.all to wait for all operations to complete
     yield Promise.all(Object.values(dictionary).map((value) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
+        if (!value.location)
+            return;
         const current = yield Current_1.default.findOne({ location: value.location });
         try {
             // If there are provinces present, get the sum of cumulative, deaths, recovered statistics via reduce
@@ -382,12 +384,13 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
                 current.deaths = value.deaths;
                 current.recovered = value.recovered;
             }
+            current.provinces = value.provinces;
+            yield current.save();
         }
         catch (err) {
             console.log(err);
+            console.log(current);
         }
-        current.provinces = value.provinces;
-        yield current.save();
     })));
 });
 //# sourceMappingURL=data.js.map
