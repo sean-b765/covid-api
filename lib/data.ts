@@ -455,7 +455,7 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 
 			try {
 				// If there are provinces present, get the sum of cumulative, deaths, recovered statistics via reduce
-				if (!Boolean(current.provinces.length)) {
+				if (current?.provinces?.length) {
 					current.cumulative = `${value.provinces
 						.map((item) => Number(item.cumulative))
 						.reduce((prev, next) => prev + next)}`
@@ -466,7 +466,7 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 						.map((item) => Number(item.recovered))
 						.reduce((prev, next) => prev + next)}`
 				} else {
-					// location contains no provinces, cumulative is already present
+					// Location contains no provinces, cumulative is already present
 					current.cumulative = value.cumulative
 					current.deaths = value.deaths
 					current.recovered = value.recovered
