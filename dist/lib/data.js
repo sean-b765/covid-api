@@ -365,6 +365,10 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
         if (!value.location)
             return;
         const current = yield Current_1.default.findOne({ location: value.location });
+        if (!current) {
+            console.log('null current');
+            return;
+        }
         try {
             // If there are provinces present, get the sum of cumulative, deaths, recovered statistics via reduce
             if ((_a = current === null || current === void 0 ? void 0 : current.provinces) === null || _a === void 0 ? void 0 : _a.length) {
@@ -389,7 +393,6 @@ const appendCurrentDocs = (records) => __awaiter(void 0, void 0, void 0, functio
         }
         catch (err) {
             console.log(err);
-            console.log(current);
         }
     })));
 });

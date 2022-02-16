@@ -454,6 +454,12 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 			if (!value.location) return
 
 			const current = await Current.findOne({ location: value.location })
+			if (!current) {
+				console.log('null current')
+
+				return
+			}
+
 			try {
 				// If there are provinces present, get the sum of cumulative, deaths, recovered statistics via reduce
 				if (current?.provinces?.length) {
@@ -478,7 +484,6 @@ const appendCurrentDocs = async (records: RawCurrentRecord[]) => {
 				await current.save()
 			} catch (err) {
 				console.log(err)
-				console.log(current)
 			}
 		})
 	)
