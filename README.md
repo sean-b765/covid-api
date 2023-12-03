@@ -1,5 +1,7 @@
 # COVID-19 API
 
+NOTE Demo no longer working because heroku free tiers discontinued
+
 Uses latest data from John Hopkins University. Historical data is pulled from the [OWID repository](https://github.com/owid/covid-19-data/blob/master/public/data/jhu/full_data.csv), which collates all the previous dates into one CSV file. Current data is pulled from [JHU's repository](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_daily_reports).
 
 A worker thread is used to perform daily updates. Due to the free heroku plan idling when no activity is detected, these updates occur when the service is started. Your response may contain outdated data while the worker thread updates the database.
